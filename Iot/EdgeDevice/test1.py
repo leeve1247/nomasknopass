@@ -6,7 +6,7 @@ from picamera import PiCamera, PiCameraCircularIO
 
 #기동
 
-state = -1
+global state = -1
 sensor = DistanceSensor(23, 24)
 PH_ZONE_MIN = 0.2 #사진 촬영시작 zone
 PH_ZONE_MAX = 0.6 #사진 촬영종료 zone
@@ -33,63 +33,53 @@ def green_rectangle():
 def yellow_rectangle():
     cv2.rectangle(frame, (int(cap_width/4),int(cap_height/6)),(int(cap_width*3/4),int(cap_height*5/6)), (0, 255, 255), 2)
 
-def human_approached():
-    return random.randint(0,10) == 2
+def human_approached(): #edge trigger
+    return False
 
-def face_detected():
-    return 0
+def face_detected(): #level trigger
+    return False
 
-def responsed():
-    return 0
+def responsed(): #level trigger
+    return False
+
+def human_forcedPassed(): #edge trigger
+    return False
+
+def manager_called(): #edge trigger
+    return False
+
+def human_passed(): #edge trigger
+    return False
+
+def human_returned(): #edge trigger
+    return False
 
 def checking_mask():
-    while True:
-        ret, frame = cap.read()
-        if human_detected():
-            print('face detected')
-            if mask_detected():
-                green_rectangle()
-                print("mask detected")
-            else :
-                print('mask not detected')
-                yellow_rectangle()    
-        
-        else:
-            white_rectangle()
-
-        cv2.imshow('video',frame)
-        if cv2.waitKey(1) & 0xff == ord('q'):
-            break
-    cv2.destroyAllWindows()
-
-
+    return False
 
 
 #While 문 시작 시점
 while True:
     # 초음파센서 주기적으로 획득
     if human_approached(): #사람이 들어오면?(초음파센서)
+        print("human approached")
         #카메라 기동
         ret, frame = cap.read()
-        white_rectangle()
+        if  human_detected():
+            yellow_rectangle()
+        elif mask_detected():
+            green_rectangle()
+        else :
+            white_rectangle()
         cv2.imshow('video',frame)
         #카메라에 얼굴 들이대달라 권고
         print("please face to the camera")
-        while mask_detected():
-                #결과(마스크와 얼굴) 감지 하면 다음 단계
-                print("we cannot find your face")
 
+        while responsed(): #결과(마스크와 얼굴) 감지 하면 다음 단계
+                #촬영 on
                 print('please wait a sec') #이용자에게 대기 요청
-                #클라우드에서 전송값 받을 때까지 while 문 수행
-            while responsed():
-                #사진을 촬영(1장)
-                print("captured!")
-                #사진을 클라우드에 전송
-
+                #클라우드에서 전송값 받을 때까지 while 문 수
         
-        
-
-        # 일련의 마스크 감지 과정 수행
         #감지가 되면
         state = checking_mask()
 
@@ -100,5 +90,26 @@ while True:
         else :
             print("you cannot pass.")
             #돌아가라는 메시지 표시
+            #부저음(static)
+
+    elif human_forcedPassed():
+        print('emergency on')
+        #아까 저장한 촬영 이미지 관리자에게 송신
+        #게이트문 재위치
+    
+    elif human_passed():
+        print('human passed')
+        #게이트문 재위치
+    
+    elif human_returned():
+        print('human returned')
+
+    else :
+        continue
+
+
+if manager_called():
+    print('manager called')
+
 
 #초기상황으로 돌아감(While문 종료 시점)
